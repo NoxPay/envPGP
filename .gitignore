@@ -29,6 +29,10 @@ go.work.sum
 # env file
 .env
 
+# Configuration and keys: recreate them with the steps in README.md
+env.json
+*.pgp
+
 # Editor/IDE
 # .idea/
 # .vscode/

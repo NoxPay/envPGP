@@ -31,21 +31,65 @@ same operation on byte slices, for callers that do not keep the files on disk.
 
 A private key stored without a passphrase is refused (`ErrUnprotectedKey`).
 
-A runnable program is in [example](example/main.go):
+## Running the example
+
+The repository carries no key and no configuration file: `env.json` and
+`*.pgp` are in `.gitignore`. Create them in the repository root with GnuPG.
+
+1. Generate a key pair. GnuPG asks for the passphrase that will protect the
+   private key; it is the one the program asks for at startup.
+
+```bash
+gpg --quick-generate-key "envPGP example <envpgp@example.com>" default default never
+```
+
+2. Export both halves. The exported private key stays protected by the
+   passphrase.
+
+```bash
+gpg --armor --export envpgp@example.com > public_key.pgp
+```
+
+```bash
+gpg --armor --export-secret-keys envpgp@example.com > private_key.pgp
+```
+
+3. Write `env.json`. The [example](example/main.go) expects this structure:
+
+```json
+{
+  "DATABASE_URL": "postgres://...",
+  "API_KEY": "...",
+  "JWT_KEY": "..."
+}
+```
+
+4. Encrypt it to the public key.
+
+```bash
+gpg --armor --encrypt --recipient envpgp@example.com --output env.pgp env.json
+```
+
+5. Run the example and type the passphrase.
 
 ```bash
 go run ./example
 ```
 
-## Creating env.pgp
-
-```bash
-gpg --import public_key.pgp
+```
+Passphrase:
+DATABASE_URL: postgres://...
+API_KEY:      ...
+JWT_KEY:      ...
 ```
 
-```bash
-gpg --armor --encrypt --recipient <key id> --output env.pgp env.json
-```
+The example prints the values because they are placeholders; a real program
+should not.
 
-Only the public key is needed to encrypt, so the plaintext `env.json` never has
-to be on the server.
+## On a server
+
+The program needs only `env.pgp` and `private_key.pgp`. Encrypting takes just
+the public key, so the plaintext `env.json` never has to be on the server, and
+`public_key.pgp` is all a colleague needs to produce a new `env.pgp`.
+
+Both files must be ASCII-armored (`--armor`).

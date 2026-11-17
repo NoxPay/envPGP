@@ -20,7 +20,7 @@ func usage() {
 	fmt.Print(`usage: example [-env file] [-key file]
 
 Asks for the passphrase of the private key, decrypts the configuration and
-reports which fields were loaded (values are never printed).
+prints it. Only do that with sample values, as here.
 
 flags:
   -env file   PGP-encrypted JSON configuration (default "env.pgp")
@@ -51,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("DATABASE_URL: %d bytes\n", len(cfg.DatabaseURL))
-	fmt.Printf("API_KEY:      %d bytes\n", len(cfg.APIKey))
-	fmt.Printf("JWT_KEY:      %d bytes\n", len(cfg.JWTKey))
+	fmt.Printf("DATABASE_URL: %s\n", cfg.DatabaseURL)
+	fmt.Printf("API_KEY:      %s\n", cfg.APIKey)
+	fmt.Printf("JWT_KEY:      %s\n", cfg.JWTKey)
 }
