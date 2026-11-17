@@ -23,8 +23,8 @@ import (
 // is the one thing this package exists to prevent.
 var ErrUnprotectedKey = errors.New("envpgp: private key is not protected by a passphrase")
 
-// Load decrypts the armored PGP message in envFile with the armored private
-// key in keyFile and unmarshals the resulting JSON into v.
+// Load reads envFile and keyFile once and keeps neither open, so both can be
+// removed from the machine as soon as it returns.
 func Load(v any, envFile, keyFile string, passphrase []byte) error {
 	message, err := os.ReadFile(envFile) // #nosec G304 -- path chosen by the caller
 	if err != nil {
@@ -42,7 +42,8 @@ func Load(v any, envFile, keyFile string, passphrase []byte) error {
 	}
 	defer clear(plain)
 
-	err = json.Unmarshal(plain, v)
+	// An editor may have saved env.json with a BOM, which encoding/json rejects.
+	err = json.Unmarshal(bytes.TrimPrefix(plain, []byte("\xef\xbb\xbf")), v)
 	if err != nil {
 		return fmt.Errorf("envpgp: parse configuration: %w", err)
 	}
@@ -50,8 +51,8 @@ func Load(v any, envFile, keyFile string, passphrase []byte) error {
 	return nil
 }
 
-// Decrypt opens an armored PGP message with an armored, passphrase-protected
-// private key and returns the plaintext.
+// Decrypt is Load without the files and the JSON step. Both inputs must be
+// ASCII-armored.
 func Decrypt(message, privateKey, passphrase []byte) ([]byte, error) {
 	keyring, err := openpgp.ReadArmoredKeyRing(bytes.NewReader(privateKey))
 	if err != nil {

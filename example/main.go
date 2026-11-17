@@ -9,7 +9,6 @@ import (
 	"github.com/NoxPay/envPGP"
 )
 
-// Config mirrors the JSON document that was encrypted into env.pgp.
 type Config struct {
 	DatabaseURL string `json:"DATABASE_URL"`
 	APIKey      string `json:"API_KEY"`

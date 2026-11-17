@@ -44,8 +44,6 @@ func armored(t *testing.T, blockType string, write func(w *bytes.Buffer) error) 
 	return out.Bytes()
 }
 
-// fixture returns an armored private key (protected when protect is true) and
-// an armored message carrying plaintext encrypted to it.
 func fixture(t *testing.T, plaintext string, protect bool) (key, message []byte) {
 	t.Helper()
 
@@ -81,7 +79,7 @@ func fixture(t *testing.T, plaintext string, protect bool) (key, message []byte)
 }
 
 func TestLoad(t *testing.T) {
-	key, message := fixture(t, `{"DATABASE_URL":"postgres://x","API_KEY":"k"}`, true)
+	key, message := fixture(t, "\xef\xbb\xbf"+`{"DATABASE_URL":"postgres://x","API_KEY":"k"}`, true)
 
 	dir := t.TempDir()
 	envFile := filepath.Join(dir, "env.pgp")

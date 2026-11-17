@@ -93,3 +93,14 @@ the public key, so the plaintext `env.json` never has to be on the server, and
 `public_key.pgp` is all a colleague needs to produce a new `env.pgp`.
 
 Both files must be ASCII-armored (`--armor`).
+
+### Removing the files after startup
+
+`Load` reads both files once and holds nothing open. Once the program is up,
+`env.pgp` and `private_key.pgp` can be deleted from the server and kept only
+by the operator: from then on the configuration exists nowhere on the machine
+but in the memory of the process.
+
+The cost is that a restart is no longer unattended. Someone has to copy the
+two files back and type the passphrase again, so this suits long-running
+services, not ones that are restarted by a supervisor.

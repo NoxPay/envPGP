@@ -1,0 +1,49 @@
+name: test
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test -timeout 60s -count 1 ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - name: go.mod tidy
+        run: go mod tidy -diff || { echo "go.mod/go.sum not tidy: run go mod tidy"; exit 1; }
+      - name: Install linters
+        run: |
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
+          go install honnef.co/go/tools/cmd/staticcheck@2026.2.2
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+      # ReadPassphrase goes through x/term, which is different code per GOOS.
+      - name: golangci-lint (every GOOS)
+        run: |
+          for os in darwin linux windows; do
+            echo "== GOOS=$os =="
+            GOOS=$os $(go env GOPATH)/bin/golangci-lint run ./...
+          done
+      - name: staticcheck
+        run: $(go env GOPATH)/bin/staticcheck ./...
+      - name: gosec
+        run: $(go env GOPATH)/bin/gosec -quiet ./...
