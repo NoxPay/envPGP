@@ -26,17 +26,7 @@ var ErrUnprotectedKey = errors.New("envpgp: private key is not protected by a pa
 // Load reads envFile and keyFile once and keeps neither open, so both can be
 // removed from the machine as soon as it returns.
 func Load(v any, envFile, keyFile string, passphrase []byte) error {
-	message, err := os.ReadFile(envFile) // #nosec G304 -- path chosen by the caller
-	if err != nil {
-		return fmt.Errorf("envpgp: %w", err)
-	}
-
-	key, err := os.ReadFile(keyFile) // #nosec G304 -- path chosen by the caller
-	if err != nil {
-		return fmt.Errorf("envpgp: %w", err)
-	}
-
-	plain, err := Decrypt(message, key, passphrase)
+	plain, err := LoadBytes(envFile, keyFile, passphrase)
 	if err != nil {
 		return err
 	}
@@ -49,6 +39,22 @@ func Load(v any, envFile, keyFile string, passphrase []byte) error {
 	}
 
 	return nil
+}
+
+// LoadBytes is Load without the JSON step: it returns the decrypted file as
+// is, for configuration in another format (INI, TOML, ...).
+func LoadBytes(envFile, keyFile string, passphrase []byte) ([]byte, error) {
+	message, err := os.ReadFile(envFile) // #nosec G304 -- path chosen by the caller
+	if err != nil {
+		return nil, fmt.Errorf("envpgp: %w", err)
+	}
+
+	key, err := os.ReadFile(keyFile) // #nosec G304 -- path chosen by the caller
+	if err != nil {
+		return nil, fmt.Errorf("envpgp: %w", err)
+	}
+
+	return Decrypt(message, key, passphrase)
 }
 
 // Decrypt is Load without the files and the JSON step. Both inputs must be

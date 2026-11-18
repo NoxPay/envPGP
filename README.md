@@ -29,6 +29,15 @@ clear(passphrase)
 terminal it reads one line, so the passphrase can be piped in. `Decrypt` is the
 same operation on byte slices, for callers that do not keep the files on disk.
 
+For configuration that is not JSON, `LoadBytes` reads the same two files and
+returns the decrypted content untouched, to hand to the parser the program
+already uses:
+
+```go
+data, err := envpgp.LoadBytes("config.ini.pgp", "private_key.pgp", passphrase)
+clear(passphrase)
+```
+
 A private key stored without a passphrase is refused (`ErrUnprotectedKey`).
 
 ## Running the example

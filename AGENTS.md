@@ -58,6 +58,7 @@ The whole API:
 |---|---|
 | `ReadPassphrase(prompt)` | Reads the passphrase from the terminal without echo. When stdin is not a terminal it reads one line, so tests and scripts can pipe it in. The prompt goes to stderr. |
 | `Load(v, envFile, keyFile, passphrase)` | Reads both files, decrypts, and unmarshals the JSON into `v` (a pointer to a struct with `json` tags). |
+| `LoadBytes(envFile, keyFile, passphrase)` | Reads both files, decrypts, and returns the plaintext as is. For configuration that is not JSON (INI, TOML): pass the bytes to the parser the program already uses. A leading BOM is not stripped. |
 | `Decrypt(message, privateKey, passphrase)` | The same on byte slices, returning the plaintext. For callers that do not keep the files on disk. |
 | `ErrUnprotectedKey` | Returned when the private key has no passphrase. Check with `errors.Is`. |
 

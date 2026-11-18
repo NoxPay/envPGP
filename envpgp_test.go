@@ -105,6 +105,31 @@ func TestLoad(t *testing.T) {
 	}
 }
 
+func TestLoadBytes(t *testing.T) {
+	const plaintext = "port = 8000\n\n[binance]\nAPIKey = k\n"
+	key, message := fixture(t, plaintext, true)
+
+	dir := t.TempDir()
+	envFile := filepath.Join(dir, "config.ini.pgp")
+	keyFile := filepath.Join(dir, "private_key.pgp")
+	err := os.WriteFile(envFile, message, 0o600)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.WriteFile(keyFile, key, 0o600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := LoadBytes(envFile, keyFile, []byte(testPassphrase))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != plaintext {
+		t.Fatalf("got %q, want %q", got, plaintext)
+	}
+}
+
 func TestDecryptWrongPassphrase(t *testing.T) {
 	key, message := fixture(t, `{}`, true)
 
